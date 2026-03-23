@@ -3,9 +3,44 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "SERVER=1 tsup-node --onSuccess 'node dist/server/index.js'",
+    "dev:worker": "WORKER=1 tsup-node --onSuccess 'node dist/worker/index.js'",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "db:setup": "npx ts-node scripts/setup-db.ts",
+    "db:migrate": "prisma migrate dev",
+    "db:init": "npm run db:setup && npm run db:migrate",
+    "prisma:studio": "npx prisma studio"
   },
-  "author": "",
+  "author": "arniparth",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/pg": "^8.20.0",
+    "prisma": "^7.5.0",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "**/*.{ts,js,json,md}": "prettier --write"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1014.0",
+    "@fastify/multipart": "^9.4.0",
+    "@fastify/swagger": "^9.7.0",
+    "@fastify/swagger-ui": "^5.2.5",
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
+    "bullmq": "^5.71.0",
+    "dotenv": "^17.3.1",
+    "fastify": "^5.8.2",
+    "ioredis": "^5.10.1",
+    "p-limit": "^7.3.0",
+    "pdf-parse": "^2.4.5",
+    "pg": "^8.20.0",
+    "tiktoken": "^1.0.22",
+    "zod": "^4.3.6"
+  }
 }

@@ -1,0 +1,9 @@
+// tsconfig.json
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  }
+}
