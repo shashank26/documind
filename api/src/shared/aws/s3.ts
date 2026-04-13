@@ -1,25 +1,29 @@
-import 'dotenv/config';
 import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { Config } from '../../config';
 
-const ACCESS_KEY = process.env.AWS_ACCESS_KEY;
-const SECRET_KEY = process.env.AWS_SECRET_KEY;
-const REGION = process.env.AWS_REGION;
-const BUCKET = process.env.AWS_S3_BUCKET;
+const { REGION, ACCESS_KEY, SECRET_KEY, BUCKET, DEBUG } = Config;
+
 export class S3 {
   private static s3: S3Client;
 
   static {
-    this.s3 = new S3Client({
-      region: REGION,
-      credentials: {
-        accessKeyId: ACCESS_KEY,
-        secretAccessKey: SECRET_KEY,
-      },
-    });
+    if (DEBUG) {
+      this.s3 = new S3Client({
+        region: REGION,
+        credentials: {
+          accessKeyId: ACCESS_KEY,
+          secretAccessKey: SECRET_KEY,
+        },
+      });
+    } else {
+      this.s3 = new S3Client({
+        region: REGION,
+      });
+    }
   }
 
   static async upload(buffer: Buffer, fileName: string) {

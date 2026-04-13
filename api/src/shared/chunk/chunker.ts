@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { Chunk } from './Chunk';
 import { encoding_for_model } from 'tiktoken';
+import { Chunk } from './Chunk';
 
 const encoder = encoding_for_model('text-embedding-3-small');
 
@@ -80,10 +79,10 @@ export const chunkFile = (file: string) => {
         // ✅ push current chunk
         chunks.push(
           new Chunk({
-            id: '' + id++,
             length: currentText.length,
             data: currentText,
             tokenLength: getTokenCount(currentText),
+            chunkIndex: id++,
           }),
         );
 
@@ -107,16 +106,22 @@ export const chunkFile = (file: string) => {
   } else if (currentText.length > 0) {
     chunks.push(
       new Chunk({
-        id: '' + id++,
         length: currentText.length,
         data: currentText,
         tokenLength: getTokenCount(currentText),
+        chunkIndex: id++,
       }),
     );
   }
   return chunks;
 };
 
-// const text = readFileSync('./glossary.txt').toString();
+// (async () => {
+//   const text = readFileSync('./glossary.txt').toString();
 
-// console.log(chunkFile(text).map((chunk) => chunk.length));
+//   const chunks = chunkFile(text);
+
+//   for await (let c of startEmbedding(chunks)) {
+//     // console.log(c.map((c) => c.chunk.id));
+//   }
+// })();

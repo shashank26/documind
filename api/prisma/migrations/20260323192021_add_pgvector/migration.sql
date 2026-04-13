@@ -1,12 +1,14 @@
 -- enable extension
 CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- create table
 CREATE TABLE document_chunks (
-  id TEXT PRIMARY KEY,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   document_id TEXT,
   content TEXT,
-  embedding VECTOR(1536),
+  embedding VECTOR(768),
+  chunk_index INT,
   token_length INT,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -16,3 +18,4 @@ CREATE INDEX document_chunks_embedding_idx
 ON document_chunks
 USING ivfflat (embedding vector_cosine_ops)
 WITH (lists = 100);
+

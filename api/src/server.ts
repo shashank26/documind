@@ -18,7 +18,7 @@ export const initializeServer = async (
   await Promise.allSettled(dependencies.map((dep) => dep(fastify)));
 
   fastify.get(
-    '/',
+    '/ping',
     {
       schema: {
         response: {
@@ -34,7 +34,7 @@ export const initializeServer = async (
       },
     },
     async function handler(req, rep) {
-      return { data: 'Hello World 2' };
+      return { data: 'pong' };
     },
   );
 

@@ -1,6 +1,5 @@
 // tsup.config.ts
 import 'dotenv/config';
-import { spawn } from 'node:child_process';
 import { defineConfig, Options } from 'tsup';
 
 const DEBUG_MODE = process.env.DEBUG === '1' ? true : false;
@@ -20,6 +19,7 @@ let config: Options = {
   dts: true,
   clean: true, // Cleans this specific outDir
   watch: DEBUG_MODE,
+  sourcemap: DEBUG_MODE,
 };
 
 if (build === 'worker') {
@@ -31,6 +31,7 @@ if (build === 'worker') {
     external: ['bullmq'],
     clean: true, // Cleans this specific outDir
     watch: DEBUG_MODE,
+    sourcemap: DEBUG_MODE,
   };
 }
 

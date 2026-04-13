@@ -64,4 +64,18 @@ export class DocumentService {
     const buffer = await file.toBuffer();
     return S3.upload(buffer, file.filename);
   }
+
+  async documentExists(id: string) {
+    const res = await prisma.document.findUnique({
+      where: {
+        id: id,
+      },
+    });
+
+    if (id === res?.id) {
+      return true;
+    }
+
+    return false;
+  }
 }

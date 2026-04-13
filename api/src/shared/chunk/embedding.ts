@@ -1,38 +1,73 @@
-import { prisma } from '../db/prisma';
-import { getTokenCount } from './chunker';
+import { getEmbedding } from '../gemeni/api';
+import { Chunk } from './Chunk';
+
+const BATCH = 10;
+const CONCURRENCY = 2;
+
+export type EmbeddingData = { chunk: Chunk; error?: any };
 
 // Using ollama for local testing
-export const embedBatch = async (texts: string[]) => {
-  const embeddings: number[][] = [];
+async function embedBatch(chunks: Chunk[]): Promise<EmbeddingData[]> {
+  const response = await Promise.all(
+    chunks.map(async (c) => {
+      try {
+        const text = c.data;
+        const data = await getEmbedding(text);
+        return {
+          chunk: {
+            ...c,
+            embedding: data,
+          },
+        };
+      } catch (err) {
+        console.error(
+          'Error during generation of embedding for chunk: ',
+          c.data,
+          '\nerror: ',
+          err,
+        );
+        return {
+          chunk: { ...c },
+          error: err,
+        };
+      }
+    }),
+  );
 
-  for (const text of texts) {
-    const res = await fetch('http://localhost:11434/api/embeddings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'nomic-embed-text',
-        prompt: text,
-      }),
+  return response;
+}
+
+export async function* startEmbedding(chunks: Chunk[]) {
+  let batches: Array<Chunk> = [];
+  const parallelBatches: (() => Promise<EmbeddingData[]>)[] = [];
+  for (let c of chunks) {
+    if (batches.length >= BATCH) {
+      const batch = [...batches];
+      parallelBatches.push(() => {
+        return embedBatch(batch);
+      });
+      batches = [];
+    }
+    batches.push(c);
+  }
+  if (batches.length > 0) {
+    const batch = [...batches];
+    parallelBatches.push(() => {
+      return embedBatch(batch);
     });
-
-    const data = await res.json();
-    embeddings.push(data.embedding);
   }
 
-  return embeddings;
-};
-
-const toPgVector = (embedding: number[]) => `[${embedding.join(',')}]`;
-
-embedBatch(['hello']).then(async (res) => {
-  await prisma.$executeRaw`
-  INSERT INTO document_chunks (id, document_id, content, embedding, token_length)
-  VALUES (
-    ${1},
-    ${'doc-1'},
-    ${'hello'},
-    ${toPgVector(res[0])}::vector,
-    ${getTokenCount('hello')}
-  )
-`;
-});
+  for (let i = 0; i < parallelBatches.length; i += CONCURRENCY) {
+    const promiseBatch: Promise<EmbeddingData[]>[] = [];
+    for (let c = i; c < i + CONCURRENCY; c++) {
+      if (parallelBatches[c]) {
+        promiseBatch.push(parallelBatches[c]());
+      }
+    }
+    const res = await Promise.all(promiseBatch);
+    const flat = res.flat(1);
+    for (let r of flat) {
+      yield r;
+    }
+  }
+}
